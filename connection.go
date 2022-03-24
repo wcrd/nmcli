@@ -80,7 +80,14 @@ func (addr *NewAddressDetails) construct_commands() []string {
 
 		// if not empty, write command
 		if !value.IsZero() {
-			output = append(output, []string{tag, value.String()}...)
+			switch x := value.Interface().(type) {
+			case string:
+				output = append(output, []string{tag, value.String()}...)
+			case []string:
+				output = append(output, []string{tag, fmt.Sprintf("'%v'", strings.Join(value.Interface().([]string), " "))}...)
+			default:
+				fmt.Println(x)
+			}
 		}
 
 	}
