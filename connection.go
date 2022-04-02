@@ -51,14 +51,26 @@ func Connections() []Connection {
 func AddConnection(conn *NewConnectionDetails) error {
 	// validate input
 	//		check ip vs subnet, if ip/24 etc.
+
+	// Create new connection
+	// TODO: Is it worth doing this in two parts? Or should execute as one command?
 	_, err := exec.Command("nmcli", "connection", "add", "con-name", conn.Name, "type", conn.Conn_type, "ifname", conn.Ifname).Output()
 	if err != nil {
 		// handle error
 		fmt.Println(err)
 		return err
 	}
+
+	// Update connection with address details
 	cmds := conn.Addr.construct_commands()
-	fmt.Println(cmds)
+	fmt.Println(append([]string{"connection", "mod", conn.Name}, cmds...))
+	res, err := exec.Command("nmcli", append([]string{"connection", "mod", conn.Name}, cmds...)...).CombinedOutput()
+	if err != nil {
+		// handle error
+		fmt.Println(err)
+		fmt.Printf("%s\n", res)
+		return err
+	}
 	return nil
 }
 
@@ -84,7 +96,7 @@ func (addr *NewAddressDetails) construct_commands() []string {
 			case string:
 				output = append(output, []string{tag, value.String()}...)
 			case []string:
-				output = append(output, []string{tag, fmt.Sprintf("'%v'", strings.Join(value.Interface().([]string), " "))}...)
+				output = append(output, []string{tag, fmt.Sprintf("%v", strings.Join(value.Interface().([]string), " "))}...)
 			default:
 				fmt.Println(x)
 			}
@@ -121,4 +133,9 @@ func (conn *NewConnectionDetails) fill_defaults() {
 	if conn.Name == "" {
 		conn.Name = "new-con-" + conn.Ifname
 	}
+}
+
+func Test() {
+	res, _ := exec.Command("nmcli", []string{"device", "show"}...).Output()
+	fmt.Println(res)
 }
