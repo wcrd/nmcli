@@ -10,10 +10,10 @@ import (
 )
 
 type Connection struct {
-	Name      string
+	Name      string `cmd:"conn-name"`
 	Uuid      string
-	Conn_type string
-	Device    string // aka ifname
+	Conn_type string `cmd:"type"`
+	Device    string `cmd:"ifname"`
 	Addr      *AddressDetails
 }
 
@@ -28,9 +28,9 @@ func (c Connection) Delete() (string, error) {
 }
 
 // Modifies the connection with given parameters.
-func (c Connection) Modify(new_c *Connection) (string, error) {
+// func (c Connection) Modify(new_c *Connection) (string, error) {
 
-}
+// }
 
 type AddressDetails struct {
 	Ipv4_method  string   `cmd:"ipv4.method"`
@@ -108,39 +108,15 @@ func AddConnection(conn *Connection) (string, error) {
 }
 
 func (addr AddressDetails) construct_commands() []string {
-	return commands(addr)
-	// output := make([]string, 0)
-	// // Get type
-	// t := reflect.TypeOf(*addr)
-
-	// // Iterate over all available fields and read the tag value
-	// for i := 0; i < t.NumField(); i++ {
-	// 	// Get the field, returns https://golang.org/pkg/reflect/#StructField
-	// 	field := t.Field(i)
-
-	// 	// Get the field tag value
-	// 	tag := field.Tag.Get("cmd")
-
-	// 	// Get the field value
-	// 	value := reflect.ValueOf(*addr).Field(i)
-
-	// 	// if not empty, write command
-	// 	if !value.IsZero() {
-	// 		switch x := value.Interface().(type) {
-	// 		case string:
-	// 			output = append(output, []string{tag, value.String()}...)
-	// 		case []string:
-	// 			output = append(output, []string{tag, fmt.Sprintf("%v", strings.Join(value.Interface().([]string), " "))}...)
-	// 		default:
-	// 			fmt.Println(x)
-	// 		}
-	// 	}
-
-	// }
-	// return output
+	return generate_commands(addr)
 }
 
-func commands(c ConnDetails) []string {
+func (conn Connection) construct_commands() []string {
+	return generate_commands(conn)
+}
+
+// Given a valid struct generates command value pairs for nmcli
+func generate_commands(c ConnDetails) []string {
 	output := make([]string, 0)
 	// Get type
 	t := reflect.TypeOf(c)
@@ -194,10 +170,10 @@ func parseConnection(conn_line string) Connection {
 	}
 }
 
-func (conn *NewConnectionDetails) fill_defaults() {
+func (conn *Connection) fill_defaults() {
 	// Fills default values in for new connection creation
 	if conn.Name == "" {
-		conn.Name = "new-con-" + conn.Ifname
+		conn.Name = "new-con-" + conn.Device
 	}
 }
 
