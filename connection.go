@@ -1,6 +1,7 @@
 package nmcli
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"reflect"
@@ -48,9 +49,29 @@ func Connections() []Connection {
 	return results
 }
 
+func GetConnection(conn string) ([]Connection, error) {
+	// get connections
+	conns := Connections()
+	// check if connection with name exists
+	existingConns := []Connection{}
+	for _, c := range conns {
+		if c.name == conn {
+			existingConns = append(existingConns, c)
+		}
+	}
+	// single conn = OK, multi conn = ERROR, no conn = ERROR
+	switch len(existingConns) {
+	case 0:
+		return existingConns, errors.New("no connection found")
+	case 1:
+		return existingConns, nil
+	default:
+		return existingConns, errors.New("multiple connections found")
+	}
+}
+
 func AddConnection(conn *NewConnectionDetails) error {
-	// validate input
-	//		check ip vs subnet, if ip/24 etc.
+	// Check if connection exists
 
 	// Create new connection
 	// TODO: Is it worth doing this in two parts? Or should execute as one command?
