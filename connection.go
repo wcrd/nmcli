@@ -12,6 +12,7 @@ import (
 type ConnDetails interface {
 	// empty interface for package specific structs
 	// TODO: Is this the best way to have common methods?
+	// TODO: Remove this and just pass an empty interface to the generate commands method. It works on any struct.
 	// Connection
 	// Address
 }
