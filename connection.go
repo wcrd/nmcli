@@ -28,13 +28,8 @@ func (c Connection) Delete() (string, error) {
 }
 
 // Modifies the connection with given parameters.
-// func (c Connection) Modify() (string, error)
+func (c Connection) Modify(new_c *Connection) (string, error) {
 
-type NewConnectionDetails struct {
-	Name      string
-	Conn_type string
-	Ifname    string
-	Addr      *AddressDetails
 }
 
 type AddressDetails struct {
@@ -43,6 +38,8 @@ type AddressDetails struct {
 	Ipv4_gateway string   `cmd:"ipv4.gateway"`
 	Ipv4_dns     []string `cmd:"ipv4.dns"`
 }
+
+type ConnDetails interface{}
 
 // Returns all connections defined in nmcli
 // Equivalent to: nmcli connection
@@ -110,10 +107,43 @@ func AddConnection(conn *Connection) (string, error) {
 	return string(res), nil
 }
 
-func (addr *AddressDetails) construct_commands() []string {
+func (addr AddressDetails) construct_commands() []string {
+	return commands(addr)
+	// output := make([]string, 0)
+	// // Get type
+	// t := reflect.TypeOf(*addr)
+
+	// // Iterate over all available fields and read the tag value
+	// for i := 0; i < t.NumField(); i++ {
+	// 	// Get the field, returns https://golang.org/pkg/reflect/#StructField
+	// 	field := t.Field(i)
+
+	// 	// Get the field tag value
+	// 	tag := field.Tag.Get("cmd")
+
+	// 	// Get the field value
+	// 	value := reflect.ValueOf(*addr).Field(i)
+
+	// 	// if not empty, write command
+	// 	if !value.IsZero() {
+	// 		switch x := value.Interface().(type) {
+	// 		case string:
+	// 			output = append(output, []string{tag, value.String()}...)
+	// 		case []string:
+	// 			output = append(output, []string{tag, fmt.Sprintf("%v", strings.Join(value.Interface().([]string), " "))}...)
+	// 		default:
+	// 			fmt.Println(x)
+	// 		}
+	// 	}
+
+	// }
+	// return output
+}
+
+func commands(c ConnDetails) []string {
 	output := make([]string, 0)
 	// Get type
-	t := reflect.TypeOf(*addr)
+	t := reflect.TypeOf(c)
 
 	// Iterate over all available fields and read the tag value
 	for i := 0; i < t.NumField(); i++ {
@@ -124,7 +154,7 @@ func (addr *AddressDetails) construct_commands() []string {
 		tag := field.Tag.Get("cmd")
 
 		// Get the field value
-		value := reflect.ValueOf(*addr).Field(i)
+		value := reflect.ValueOf(c).Field(i)
 
 		// if not empty, write command
 		if !value.IsZero() {
