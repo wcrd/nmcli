@@ -9,8 +9,15 @@ import (
 	"strings"
 )
 
+type ConnDetails interface {
+	// empty interface for package specific structs
+	// TODO: Is this the best way to have common methods?
+	// Connection
+	// Address
+}
+
 type Connection struct {
-	Name      string `cmd:"conn-name"`
+	Name      string `cmd:"con-name"`
 	Uuid      string
 	Conn_type string `cmd:"type"`
 	Device    string `cmd:"ifname"`
@@ -28,9 +35,37 @@ func (c Connection) Delete() (string, error) {
 }
 
 // Modifies the connection with given parameters.
-// func (c Connection) Modify(new_c *Connection) (string, error) {
+func (c *Connection) Modify(new_c Connection) (string, error) {
+	// conn_name := &c.Name
+	cmds := new_c.construct_commands()
+	// if address details provided then include
+	if !reflect.DeepEqual(new_c.Addr, AddressDetails{}) {
+		// cmds = append(cmds, c.Addr.construct_commands()...)
+		fmt.Println("Address present.")
+	}
+	// convert to string command
+	cmds_str := strings.Join(cmds, " ")
+	// fmt.Printf("NEW COMMAND: connection mod %v %v\n", c.Name, cmds_str)
+	// return "", nil
+	// execute
+	res, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection mod %v %v", c.Name, cmds_str),
+	).CombinedOutput()
+	if err != nil {
+		return string(res), err
+	}
+	// update original connection with new details
+	new_conn, err := GetConnectionByName(new_c.Name)
+	if err != nil {
+		// multiple connections by that name / not exists
+		return "", err
+	}
+	*c = new_conn[0]
 
-// }
+	return string(res), nil
+}
 
 type AddressDetails struct {
 	Ipv4_method  string   `cmd:"ipv4.method"`
@@ -38,8 +73,6 @@ type AddressDetails struct {
 	Ipv4_gateway string   `cmd:"ipv4.gateway"`
 	Ipv4_dns     []string `cmd:"ipv4.dns"`
 }
-
-type ConnDetails interface{}
 
 // Returns all connections defined in nmcli
 // Equivalent to: nmcli connection
@@ -132,8 +165,8 @@ func generate_commands(c ConnDetails) []string {
 		// Get the field value
 		value := reflect.ValueOf(c).Field(i)
 
-		// if not empty, write command
-		if !value.IsZero() {
+		// if value and tag not empty, write command
+		if !value.IsZero() && tag != "" {
 			switch x := value.Interface().(type) {
 			case string:
 				output = append(output, []string{tag, value.String()}...)
