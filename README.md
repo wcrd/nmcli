@@ -57,6 +57,7 @@ c_list, _ := nmcli.GetConnectionByName("{con-name}")
 // take first instance of connection with name {con-name}
 // typically only one connection object is returned, but it is possible to have multiple connections with the same con-name
 c := c_list[0]
+// This will delete all connections that have name {con-name}
 msg, err := c.Delete()
 ```
 
@@ -98,10 +99,10 @@ msg, err := c.Modify(c_updates)
 | networking | on | not supported |
 | networking | off | not supported |
 | networking | connectivity | not supported |
-| radio | | not supported |
-| radio | all | not supported |
-| radio | wifi | not supported |
-| radio | wwan | not supported |
+| radio | | supported |
+| radio | all | supported |
+| radio | wifi | supported |
+| radio | wwan | supported |
 | connection | | supported |
 | connection | show | supported |
 | connection | up | not supported |
