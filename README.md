@@ -16,6 +16,24 @@ Also inspired by the python nmcli wrapper https://github.com/ushiboy/nmcli [(pyp
 ## Usage ##
 
 ### Check for network-manager ###
+### Radios ###
+Get current state of radios:
+```golang
+radios, err := nmcli.Radios()
+```
+
+Change radio state:
+```golang
+// First get radios object
+radios, err := nmcli.Radios()
+
+// Set WIFI state
+msg, err := radios.ChangeState(nmcli.WIFI, nmcli.OFF)
+
+// Set state of all radios
+msg, err := radios.ChangeState(nmcli.ALL, nmcli.ON)
+```
+
 ### Connections ###
 
 Get all connections:
