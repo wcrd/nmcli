@@ -74,9 +74,9 @@ c_updates := Connection{
     Name: "new-name",
     Device: "wlp58s0",
     Addr: &nmcli.AddressDetails{
-			Ipv4_method:  "manual",
-			Ipv4_address: "192.168.2.1",
-			Ipv4_dns:     []string{"8.8.8.8", "1.1.1.1"},
+      Ipv4_method:  "manual",
+      Ipv4_address: "192.168.2.1",
+      Ipv4_dns:     []string{"8.8.8.8", "1.1.1.1"},
     }
 }
 msg, err := c.Modify(c_updates)
