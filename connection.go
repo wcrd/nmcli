@@ -35,6 +35,20 @@ func (c Connection) Delete() (string, error) {
 	return string(res), nil
 }
 
+// Clones an existing connnection and gives it a new name
+// Equivalent to: nmcli con clone {name|uuid} {new_name}
+func (c Connection) Clone(new_name string) (string, error) {
+	msg, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection clone %v %v", c.Uuid, new_name),
+	).Output()
+	if err != nil {
+		return string(msg), err
+	}
+	return string(msg), nil
+}
+
 // Modifies the connection with given parameters.
 func (c *Connection) Modify(new_c Connection) (string, error) {
 	// conn_name := &c.Name
@@ -149,6 +163,26 @@ func (conn Connection) construct_commands() []string {
 	return generate_commands(conn)
 }
 
+//*********************
+// HELPERS
+// ********************
+
+func parseConnection(conn_line string) Connection {
+	regex := regexp.MustCompile(`^([\S\s]+)\s{2}(\S+)\s{2}(\S+)\s+(\S+)\s*`)
+	match := regex.FindStringSubmatch(conn_line)
+	// fmt.Println(match)
+	if len(match) != 5 {
+		fmt.Println("Error. Incorrect number of fields returned. Aborting.")
+	}
+
+	return Connection{
+		Name:      strings.TrimSpace(match[1]),
+		Uuid:      strings.TrimSpace(match[2]),
+		Conn_type: strings.TrimSpace(match[3]),
+		Device:    strings.TrimSpace(match[4]),
+	}
+}
+
 // Given a valid struct generates command value pairs for nmcli
 func generate_commands(c ConnDetails) []string {
 	output := make([]string, 0)
@@ -180,38 +214,4 @@ func generate_commands(c ConnDetails) []string {
 
 	}
 	return output
-}
-
-// nmcli connection add con-name {name} type {type} ifname {device}
-
-//*********************
-// HELPERS
-// ********************
-
-func parseConnection(conn_line string) Connection {
-	regex := regexp.MustCompile(`^([\S\s]+)\s{2}(\S+)\s{2}(\S+)\s+(\S+)\s*`)
-	match := regex.FindStringSubmatch(conn_line)
-	// fmt.Println(match)
-	if len(match) != 5 {
-		fmt.Println("Error. Incorrect number of fields returned. Aborting.")
-	}
-
-	return Connection{
-		Name:      strings.TrimSpace(match[1]),
-		Uuid:      strings.TrimSpace(match[2]),
-		Conn_type: strings.TrimSpace(match[3]),
-		Device:    strings.TrimSpace(match[4]),
-	}
-}
-
-func (conn *Connection) fill_defaults() {
-	// Fills default values in for new connection creation
-	if conn.Name == "" {
-		conn.Name = "new-con-" + conn.Device
-	}
-}
-
-func Test() {
-	res, _ := exec.Command("nmcli", []string{"device", "show"}...).Output()
-	fmt.Println(res)
 }

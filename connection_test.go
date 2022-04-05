@@ -2,7 +2,10 @@ package nmcli
 
 import (
 	"errors"
+	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_CreateNewConnection(t *testing.T) {
@@ -33,6 +36,31 @@ func Test_CreateNewConnection(t *testing.T) {
 	}
 
 }
+func Test_ModifyConnection(t *testing.T) {}
+
+func Test_CloneConnection(t *testing.T) {
+	// get connection
+	c, _ := GetConnectionByName("wcrd-go-nmcli-wrapper-test-connection")
+	if len(c) == 0 {
+		t.Skipf("Test connection has not been created. This may be due to a prior test failure. Skipping this test.")
+	}
+
+	// clone
+	msg, err := c[0].Clone("wcrd-go-nmcli-wrapper-test-connection-clone")
+	if err != nil {
+		t.Errorf("failed to clone connection.\nmsg: %v", msg)
+	}
+
+	// verify creation
+	c, _ = GetConnectionByName("wcrd-go-nmcli-wrapper-test-connection-clone")
+	assert.GreaterOrEqual(t, len(c), 1, "No connection by the cloned name was found.")
+
+	// clean-up
+	_, err = c[0].Delete()
+	if err != nil {
+		fmt.Printf("Failed to delete cloned connection: %v\nPlease delete manually using nmcli.", c[0].Name)
+	}
+}
 
 func Test_DeleteConnection(t *testing.T) {
 	// requires that the create new connection has run prior
@@ -51,5 +79,3 @@ func Test_DeleteConnection(t *testing.T) {
 	}
 
 }
-
-func Test_ModifyConnection(t *testing.T) {}

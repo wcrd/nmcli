@@ -109,7 +109,7 @@ msg, err := c.Modify(c_updates)
 | connection | down | not supported |
 | connection | add | supported |
 | connection | modify | supported |
-| connection | clone | not supported |
+| connection | clone | supported |
 | connection | edit | not supported |
 | connection | delete | supported |
 | connection | reload | not supported |
