@@ -133,7 +133,7 @@ func AddConnection(conn *Connection) (string, error) {
 
 	// Update connection with address details
 	cmds := conn.Addr.construct_commands()
-	fmt.Println(append([]string{"connection", "mod", conn.Name}, cmds...))
+	// fmt.Println(append([]string{"connection", "mod", conn.Name}, cmds...))
 	res, err = exec.Command("nmcli", append([]string{"connection", "mod", conn.Name}, cmds...)...).CombinedOutput()
 	if err != nil {
 		return string(res), err
