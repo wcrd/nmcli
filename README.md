@@ -15,6 +15,15 @@ Also inspired by the python nmcli wrapper https://github.com/ushiboy/nmcli [(pyp
 
 ## Usage ##
 
+### Check network manager (`nmcli`) version on system ###
+```golang
+ver, err := nmcli.ValidateNmcliInstalled()
+if err != nil {
+  // nmcli is not installed
+}
+fmt.Println(ver)  // => nmcli version string
+```
+
 ### Check for network-manager ###
 ### Radios ###
 Get current state of radios:
