@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+// TODO: Update all code to use bash -c for exec.Command
+
 type ConnDetails interface {
 	// empty interface for package specific structs
 	// TODO: Is this the best way to have common methods?
