@@ -19,6 +19,7 @@ type ConnDetails interface {
 	// Address
 }
 
+// TODO: Expand field set captured. Included State, etc in here.
 type Connection struct {
 	Name      string `cmd:"con-name"`
 	Uuid      string
@@ -56,6 +57,35 @@ func (c Connection) Clone(new_name string) (string, error) {
 		return string(msg), err
 	}
 	return string(msg), nil
+}
+
+// Enables the current connection
+// Equivalent to: nmcli con up {name|uuid}
+func (c Connection) Up() (msg string, err error) {
+	res, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection up %v", c.Uuid),
+	).Output()
+	if err != nil {
+		return string(res), err
+	}
+	return string(res), nil
+}
+
+// Disables the current connection
+// Equivalen to: nmcli con down {name|uuid}
+func (c Connection) Down() (msg string, err error) {
+	res, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection down %v", c.Uuid),
+	).Output()
+	if err != nil {
+		return string(res), err
+	}
+	return string(res), nil
+}
 }
 
 // Modifies the connection with given parameters.

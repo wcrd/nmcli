@@ -62,6 +62,31 @@ func Test_CloneConnection(t *testing.T) {
 	}
 }
 
+// TODO
+func Test_ConnectionUp(t *testing.T) {
+	// requires that the create new connection has run prior
+
+	// get connection
+	c, _ := GetConnectionByName("wcrd-go-nmcli-wrapper-test-connection")
+	if len(c) == 0 {
+		t.Skipf("Test connection has not been created. This may be due to a prior test failure. Skipping this test.")
+	}
+
+	// Verify state
+
+}
+
+//TODO
+func Test_ConnectionDown(t *testing.T) {
+	// requires that the create new connection has run prior
+
+	// get connection
+	c, _ := GetConnectionByName("wcrd-go-nmcli-wrapper-test-connection")
+	if len(c) == 0 {
+		t.Skipf("Test connection has not been created. This may be due to a prior test failure. Skipping this test.")
+	}
+}
+
 func Test_DeleteConnection(t *testing.T) {
 	// requires that the create new connection has run prior
 
