@@ -12,9 +12,9 @@ func Run() {
 
 // Checks whether nmcli is installed on the system
 // Return an error if nmcli not installed, and a version string if it is installed
-func ValidateNmcliInstalled() (string, error) {
+func ValidateNmcliInstalled() (msg string, err error) {
 	// test for precence of nmcli
-	msg, err := exec.Command(
+	res, err := exec.Command(
 		"bash",
 		"-c",
 		"nmcli --version",
@@ -24,5 +24,5 @@ func ValidateNmcliInstalled() (string, error) {
 		return "", errors.New("nmcli not found on this system")
 	}
 
-	return string(msg), nil
+	return string(res), nil
 }
