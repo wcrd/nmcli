@@ -19,6 +19,7 @@ type ConnDetails interface {
 	// Address
 }
 
+// TODO: Expand field set captured. Included State, etc in here.
 type Connection struct {
 	Name      string `cmd:"con-name"`
 	Uuid      string
@@ -27,10 +28,21 @@ type Connection struct {
 	Addr      *AddressDetails
 }
 
+type AddressDetails struct {
+	Ipv4_method  string   `cmd:"ipv4.method"`
+	Ipv4_address string   `cmd:"ipv4.address"`
+	Ipv4_gateway string   `cmd:"ipv4.gateway"`
+	Ipv4_dns     []string `cmd:"ipv4.dns"`
+}
+
 // Deletes the connection.
 // Returns nmcli success message and error.
-func (c Connection) Delete() (string, error) {
-	res, err := exec.Command("nmcli", "connection", "del", c.Name).Output()
+func (c Connection) Delete() (msg string, err error) {
+	res, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection del %v", c.Name),
+	).Output()
 	if err != nil {
 		return "", err
 	}
@@ -39,20 +51,48 @@ func (c Connection) Delete() (string, error) {
 
 // Clones an existing connnection and gives it a new name
 // Equivalent to: nmcli con clone {name|uuid} {new_name}
-func (c Connection) Clone(new_name string) (string, error) {
-	msg, err := exec.Command(
+func (c Connection) Clone(new_name string) (msg string, err error) {
+	res, err := exec.Command(
 		"bash",
 		"-c",
 		fmt.Sprintf("nmcli connection clone %v %v", c.Uuid, new_name),
 	).Output()
 	if err != nil {
-		return string(msg), err
+		return string(res), err
 	}
-	return string(msg), nil
+	return string(res), nil
+}
+
+// Enables the current connection
+// Equivalent to: nmcli con up {name|uuid}
+func (c Connection) Up() (msg string, err error) {
+	res, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection up %v", c.Uuid),
+	).Output()
+	if err != nil {
+		return string(res), err
+	}
+	return string(res), nil
+}
+
+// Disables the current connection
+// Equivalen to: nmcli con down {name|uuid}
+func (c Connection) Down() (msg string, err error) {
+	res, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection down %v", c.Uuid),
+	).Output()
+	if err != nil {
+		return string(res), err
+	}
+	return string(res), nil
 }
 
 // Modifies the connection with given parameters.
-func (c *Connection) Modify(new_c Connection) (string, error) {
+func (c *Connection) Modify(new_c Connection) (msg string, err error) {
 	// conn_name := &c.Name
 	cmds := new_c.construct_commands()
 	// if address details provided then include
@@ -69,7 +109,7 @@ func (c *Connection) Modify(new_c Connection) (string, error) {
 		"bash",
 		"-c",
 		fmt.Sprintf("nmcli connection mod %v %v", c.Name, cmds_str),
-	).CombinedOutput()
+	).Output()
 	if err != nil {
 		return string(res), err
 	}
@@ -84,17 +124,10 @@ func (c *Connection) Modify(new_c Connection) (string, error) {
 	return string(res), nil
 }
 
-type AddressDetails struct {
-	Ipv4_method  string   `cmd:"ipv4.method"`
-	Ipv4_address string   `cmd:"ipv4.address"`
-	Ipv4_gateway string   `cmd:"ipv4.gateway"`
-	Ipv4_dns     []string `cmd:"ipv4.dns"`
-}
-
 // Returns all connections defined in nmcli
 // Equivalent to: nmcli connection
 func Connections() []Connection {
-	res, err := exec.Command("nmcli", "connection").Output()
+	res, err := exec.Command("bash", "-c", "nmcli connection").Output()
 	if err != nil {
 		// handle error
 		fmt.Println(err)
@@ -139,10 +172,14 @@ func GetConnectionByName(conn string) ([]Connection, error) {
 // Creates a new connection
 // Equivalent to: nmcli con add con-name {name} type {type} ifname {ifname}
 // Returns nmcli message and error
-func AddConnection(conn *Connection) (string, error) {
+func AddConnection(conn *Connection) (msg string, err error) {
 	// Create new connection
 	// TODO: Is it worth doing this in two parts? Or should execute as one command?
-	res, err := exec.Command("nmcli", "connection", "add", "con-name", conn.Name, "type", conn.Conn_type, "ifname", conn.Device).Output()
+	res, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection add con-name %v type %v ifname %v", conn.Name, conn.Conn_type, conn.Device),
+	).Output()
 	if err != nil {
 		return string(res), err
 	}
@@ -183,37 +220,4 @@ func parseConnection(conn_line string) Connection {
 		Conn_type: strings.TrimSpace(match[3]),
 		Device:    strings.TrimSpace(match[4]),
 	}
-}
-
-// Given a valid struct generates command value pairs for nmcli
-func generate_commands(c ConnDetails) []string {
-	output := make([]string, 0)
-	// Get type
-	t := reflect.TypeOf(c)
-
-	// Iterate over all available fields and read the tag value
-	for i := 0; i < t.NumField(); i++ {
-		// Get the field, returns https://golang.org/pkg/reflect/#StructField
-		field := t.Field(i)
-
-		// Get the field tag value
-		tag := field.Tag.Get("cmd")
-
-		// Get the field value
-		value := reflect.ValueOf(c).Field(i)
-
-		// if value and tag not empty, write command
-		if !value.IsZero() && tag != "" {
-			switch x := value.Interface().(type) {
-			case string:
-				output = append(output, []string{tag, value.String()}...)
-			case []string:
-				output = append(output, []string{tag, fmt.Sprintf("%v", strings.Join(value.Interface().([]string), " "))}...)
-			default:
-				fmt.Println(x)
-			}
-		}
-
-	}
-	return output
 }
