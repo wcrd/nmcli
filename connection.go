@@ -37,8 +37,12 @@ type AddressDetails struct {
 
 // Deletes the connection.
 // Returns nmcli success message and error.
-func (c Connection) Delete() (string, error) {
-	res, err := exec.Command("nmcli", "connection", "del", c.Name).Output()
+func (c Connection) Delete() (msg string, err error) {
+	res, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection del %v", c.Name),
+	).Output()
 	if err != nil {
 		return "", err
 	}
@@ -47,16 +51,16 @@ func (c Connection) Delete() (string, error) {
 
 // Clones an existing connnection and gives it a new name
 // Equivalent to: nmcli con clone {name|uuid} {new_name}
-func (c Connection) Clone(new_name string) (string, error) {
-	msg, err := exec.Command(
+func (c Connection) Clone(new_name string) (msg string, err error) {
+	res, err := exec.Command(
 		"bash",
 		"-c",
 		fmt.Sprintf("nmcli connection clone %v %v", c.Uuid, new_name),
 	).Output()
 	if err != nil {
-		return string(msg), err
+		return string(res), err
 	}
-	return string(msg), nil
+	return string(res), nil
 }
 
 // Enables the current connection
@@ -86,10 +90,9 @@ func (c Connection) Down() (msg string, err error) {
 	}
 	return string(res), nil
 }
-}
 
 // Modifies the connection with given parameters.
-func (c *Connection) Modify(new_c Connection) (string, error) {
+func (c *Connection) Modify(new_c Connection) (msg string, err error) {
 	// conn_name := &c.Name
 	cmds := new_c.construct_commands()
 	// if address details provided then include
@@ -106,7 +109,7 @@ func (c *Connection) Modify(new_c Connection) (string, error) {
 		"bash",
 		"-c",
 		fmt.Sprintf("nmcli connection mod %v %v", c.Name, cmds_str),
-	).CombinedOutput()
+	).Output()
 	if err != nil {
 		return string(res), err
 	}
@@ -124,7 +127,7 @@ func (c *Connection) Modify(new_c Connection) (string, error) {
 // Returns all connections defined in nmcli
 // Equivalent to: nmcli connection
 func Connections() []Connection {
-	res, err := exec.Command("nmcli", "connection").Output()
+	res, err := exec.Command("bash", "-c", "nmcli connection").Output()
 	if err != nil {
 		// handle error
 		fmt.Println(err)
@@ -169,10 +172,14 @@ func GetConnectionByName(conn string) ([]Connection, error) {
 // Creates a new connection
 // Equivalent to: nmcli con add con-name {name} type {type} ifname {ifname}
 // Returns nmcli message and error
-func AddConnection(conn *Connection) (string, error) {
+func AddConnection(conn *Connection) (msg string, err error) {
 	// Create new connection
 	// TODO: Is it worth doing this in two parts? Or should execute as one command?
-	res, err := exec.Command("nmcli", "connection", "add", "con-name", conn.Name, "type", conn.Conn_type, "ifname", conn.Device).Output()
+	res, err := exec.Command(
+		"bash",
+		"-c",
+		fmt.Sprintf("nmcli connection add con-name %v type %v ifname %v", conn.Name, conn.Conn_type, conn.Device),
+	).Output()
 	if err != nil {
 		return string(res), err
 	}
