@@ -27,6 +27,13 @@ type Connection struct {
 	Addr      *AddressDetails
 }
 
+type AddressDetails struct {
+	Ipv4_method  string   `cmd:"ipv4.method"`
+	Ipv4_address string   `cmd:"ipv4.address"`
+	Ipv4_gateway string   `cmd:"ipv4.gateway"`
+	Ipv4_dns     []string `cmd:"ipv4.dns"`
+}
+
 // Deletes the connection.
 // Returns nmcli success message and error.
 func (c Connection) Delete() (string, error) {
@@ -82,13 +89,6 @@ func (c *Connection) Modify(new_c Connection) (string, error) {
 	*c = new_conn[0]
 
 	return string(res), nil
-}
-
-type AddressDetails struct {
-	Ipv4_method  string   `cmd:"ipv4.method"`
-	Ipv4_address string   `cmd:"ipv4.address"`
-	Ipv4_gateway string   `cmd:"ipv4.gateway"`
-	Ipv4_dns     []string `cmd:"ipv4.dns"`
 }
 
 // Returns all connections defined in nmcli
@@ -183,37 +183,4 @@ func parseConnection(conn_line string) Connection {
 		Conn_type: strings.TrimSpace(match[3]),
 		Device:    strings.TrimSpace(match[4]),
 	}
-}
-
-// Given a valid struct generates command value pairs for nmcli
-func generate_commands(c ConnDetails) []string {
-	output := make([]string, 0)
-	// Get type
-	t := reflect.TypeOf(c)
-
-	// Iterate over all available fields and read the tag value
-	for i := 0; i < t.NumField(); i++ {
-		// Get the field, returns https://golang.org/pkg/reflect/#StructField
-		field := t.Field(i)
-
-		// Get the field tag value
-		tag := field.Tag.Get("cmd")
-
-		// Get the field value
-		value := reflect.ValueOf(c).Field(i)
-
-		// if value and tag not empty, write command
-		if !value.IsZero() && tag != "" {
-			switch x := value.Interface().(type) {
-			case string:
-				output = append(output, []string{tag, value.String()}...)
-			case []string:
-				output = append(output, []string{tag, fmt.Sprintf("%v", strings.Join(value.Interface().([]string), " "))}...)
-			default:
-				fmt.Println(x)
-			}
-		}
-
-	}
-	return output
 }
