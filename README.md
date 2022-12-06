@@ -25,6 +25,27 @@ fmt.Println(ver)  // => nmcli version string
 ```
 
 ### Check for network-manager ###
+TBC
+
+### General ###
+Get status
+```golang
+```
+
+Get hostname
+```golang
+```
+
+Set hostname
+```golang
+REVIEW THIS; why set
+```
+
+Get permissions
+```golang
+```
+
+
 ### Radios ###
 Get current state of radios:
 ```golang
